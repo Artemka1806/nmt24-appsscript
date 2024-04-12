@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+  <!-- https://developers.google.com/apps-script/add-ons/guides/css -->
+</head>
+
+<body>
+  <style>
+    body {
+      padding: 0px 10px;
+    }
+
+    h1 {
+      margin: 2px
+    }
+
+    .button {
+      margin: 2px;
+      margin-left: 0px;
+      text-align: left;
+      width: 180px;
+      padding-left: 5px;
+    }
+
+    #templates {
+      display: flex;
+      flex-direction: column;
+    }
+
+    tasks-count {
+      display: flex;
+      flex-direction: row;
+    }
+
+    input[type="number"] {
+      width: 40px;
+    }
+
+    select {
+      text-align: left;
+      width: 200px
+    }
+
+    #plashka {
+      position: absolute;
+      z-index: 100;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background-color: #303030;
+      color: darkgrey;
+      opacity: 95%
+    }
+
+    .modal-header {
+      color: #fff;
+      font-weight: bold;
+    }
+
+    span {
+      color: white;
+      font-weight: norma;
+      /* margin-bottom: 20px; */
+    }
+  </style>
+
+  <dialog class="share plashka-hide" id='plashka'>
+    <h2 class="modal-header">Система працює! Очікуйте!<h2>
+        <img src = "https://i.pinimg.com/originals/ec/05/32/ec0532d0a6db947f62f0daf02e8921d9.gif" style="width: 250px;">
+        <span>⬆ Шатківський</span>
+        <img src = "https://media1.tenor.com/m/bCfpwMjfAi0AAAAC/cat-typing.gif" style="width: 250px;">
+        <span>⬆ Герасимчук</span>
+        <img src = "https://media0.giphy.com/media/JIX9t2j0ZTN9S/200w.gif?cid=6c09b952ejqheyxyxyrn98e7u8mfjgo66z9c4lxr44m6781t&ep=v1_gifs_search&rid=200w.gif&ct=g" style="width: 250px;">
+        <span>⬆ Тищенко</span>
+
+
+  </dialog>
+
+  <fieldset>
+    <legend>База даних</legend>
+    <div>
+      <button class="action button" onclick="saveToDB()" id ='saveData'>🚀 Завантажити в базу даних</button>
+    </div>
+    <div>
+      <button class="action button" onclick="saveSettings()" id ='saveSettings'>💾 Зберегти налаштування</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Предмет</legend>
+    <div>
+      <? var subjects = NMTparserlib.getSubjects(); ?>
+      <? var subject = NMTparserlib.getSubject(); ?>
+      <select id="subjects">
+        <? for (var i = 0; i < subjects.length; i++) { ?>
+          <? if (subject == i) { ?>
+              <option selected>
+                <?= subjects[i] ?>
+            </option>
+            <? } else  { ?>
+              <option>
+                <?= subjects[i] ?>
+            </option>
+            <? } ?>
+        <? } ?>      
+      </select>
+    </div>
+  </fieldset>
+
+
+
+  <fieldset>
+    <legend>Статус</legend>
+
+    <? var status = NMTparserlib.getStatus() ?>
+    <? if (status == true) { ?>
+    <div>
+      <input type="radio" id="active" name="status" value="true" checked />
+      <label for="active">Доступний для проходження</label>
+    </div>
+    <div>
+      <input type="radio" id="passive" name="status" value="false" />
+      <label for="passive">Недоступний для проходження</label>
+    </div>
+    <? } else if (status == false)  { ?>
+    <div>
+      <input type="radio" id="active" name="status" value="true" />
+      <label for="active">Доступний для проходження</label>
+    </div>
+    <div>
+      <input type="radio" id="passive" name="status" value="false" checked />
+      <label for="passive">Недоступний для проходження</label>
+    </div>
+    <? } ?>
+  </fieldset>
+
+  <fieldset>
+    <legend>Тип тестування</legend>
+
+    <? var type = NMTparserlib.getType(); ?>
+    <? if (type == 1) { ?>
+    <div>
+      <input type="radio" id="active" name="type" value="1" checked />
+      <label for="active">Пробне НМТ</label>
+    </div>
+    <div>
+      <input type="radio" id="passive" name="type" value="0" />
+      <label for="passive">Навчальний тест</label>
+    </div>
+    <? } else  { ?>
+    <div>
+      <input type="radio" id="active" name="type" value="1" />
+      <label for="active">Пробне НМТ</label>
+    </div>
+    <div>
+      <input type="radio" id="passive" name="type" value="0" checked />
+      <label for="passive">Навчальний тест</label>
+    </div>
+    <? } ?>
+  </fieldset>
+
+  <fieldset>
+    <legend>Час на тестування (в хвилинах)</legend>
+    <? var time = NMTparserlib.getTime(); ?>
+
+    <div class="time">
+      <input type="number" id="time" style="width: 100px;" value = <?= time ?>>
+    </div>
+
+  </fieldset>
+
+  <fieldset>
+    <legend>Додати завдання:</legend>
+    <? var templates = NMTparserlib.getTemplates(); ?>
+    <div id="templates">
+      <? for (var i = 0; i < templates.length; i++) { ?>
+      <div class="tasks-count">
+        <button class="button" onclick = "s( <?= templates[i] ?>,<?= i ?>)" >
+          <?= templates[i] ?>
+        </button>
+        <input type="number" id="numericInput<?= i?>" name="quantity" min="1" max="50" step="1" value="1">
+
+      </div>
+      <? } ?>
+    </div>
+    <div>
+      <button class="share button" onclick="renumerateTasks()" id ='save'>🔢 Пронумерувати</button>
+    </div>
+
+  </fieldset>
+
+  <fieldset>
+    <legend>Очистка</legend>
+
+    <div>
+      <button class="create button" onclick="clearAll()" id ='clearAll'>❌ Очистити документ</button>
+    </div>
+  </fieldset>
+
+
+  <fieldset>
+    <legend>Сайт</legend>
+    <div>
+      <button class="action button" onclick="window.open('https://shatvm.github.io/nmt24')">Сайт nmt24 (github + render)</button>
+    </div>
+
+    <div>
+      <button class="button" onclick="window.open('https://dev-validator.ztu.edu.ua/nmt24/nmt-client/index.html')">Сайт nmt24 (virtual server)</button>
+    </div>
+  </fieldset>
+
+  <details>
+    <summary style="color: #fff">Для розробника</summary>
+    <div>
+      <button class="action" onclick="google.script.run.withSuccessHandler(onSuccess).evalLibFunction('TestDataManagerRemoveCache');">Видалити кеш документу</button>
+      <button class="action" onclick="google.script.run.withSuccessHandler(onSuccess).evalLibFunction('TestDataManagerCacheAlert');">Отримати кеш документу</button>
+    </div>
+    <hr>
+    <div>
+      <button class="action" onclick="google.script.run.withSuccessHandler(onSuccess).evalLibFunction('allTestsVisible')">Зробити ВСІ документи видимими</button>
+      <button class="action" onclick="google.script.run.withSuccessHandler(onSuccess).evalLibFunction('allTestsInisible')">Зробити ВСІ документи невидимими</button>
+    </div>
+  </details>
+
+
+  <!-- <? function count(){
+          return document.getElementById('numericInput').value}?> -->
+
+
+  <script>
+    function onSuccess(){
+      var plashkaElement = document.getElementById('plashka');
+      plashkaElement.close();
+    }
+
+    function onFailure(){
+      var plashkaElement = document.getElementById('plashka');
+      plashkaElement.close();
+      alert("Виникла помилка!");
+    }
+
+    function saveSettings(){
+      let subject = document.getElementById("subjects").selectedIndex;
+      console.log(subject)
+
+      let status;
+      let statusElement = document.querySelector('input[name="status"]:checked');
+      if (statusElement.value == "true"){
+        status = true;
+      } else if (statusElement.value == "false"){
+        status = false;
+      }
+
+      let type = parseInt(document.querySelector( 'input[name="type"]:checked').value);
+
+      let time = parseInt(document.getElementById('time').value);
+
+      let argumentsString = `${subject}, ${status}, ${type}, ${time}`
+      console.log(argumentsString)
+      document.getElementById('plashka').show();
+      google.script.run.withFailureHandler(onFailure).withSuccessHandler(onSuccess).evalLibFunction("saveSettings", argumentsString)
+    }
+
+    //[START] Вставлення шаблону визначену лічильником кількість разів 
+    async function s(name,templateIndex) {
+    // Рекурсивний виклик функції
+    var plashkaElement = document.getElementById('plashka');
+      plashkaElement.showModal()
+    async function recursiveCall(counter) {
+      
+        // Базовий випадок: якщо лічильник дорівнює 0, завершуємо рекурсію
+        if (counter === 0) {
+            console.log("Всі виклики завершено");
+            document.getElementById('numericInput' + templateIndex).value = 1;
+            var plashkaElement = document.getElementById('plashka');
+            plashkaElement.close()
+            //модалка
+            return;
+        }
+
+        // Викликаємо функцію
+        console.log(`Виклик функції ${counter}`);
+        document.getElementById('numericInput' + templateIndex).value = counter
+        await asyncFunction(name);
+
+        // Рекурсивно викликаємо функцію з лічильником, зменшеним на 1
+        await recursiveCall(counter - 1);
+    }
+
+    // Викликаємо рекурсивну функцію зі значенням лічильника
+    await recursiveCall(document.getElementById('numericInput'+templateIndex).value);
+    }
+
+    async function asyncFunction(name) {
+      return new Promise(resolve => {
+        // Псевдоасинхронна операція (таймаут 3 секунди)
+        setTimeout(() => {
+          google.script.run.withUserObject(this).evalLibFunction("pTemplate", '"'+name+'"');
+            console.log("Функція виконана");
+            resolve();
+        }, 3000);
+      });
+    }
+
+    // [END]---
+
+    function saveToDB(){
+      var plashkaElement = document.getElementById('plashka');
+      plashkaElement.showModal()
+      google.script.run.withFailureHandler(onFailure).withSuccessHandler(onSuccess).evalLibFunction("main")
+    }
+
+    function renumerateTasks(){
+      var plashkaElement = document.getElementById('plashka');
+      plashkaElement.showModal()
+      google.script.run.withFailureHandler(onFailure).withSuccessHandler(onSuccess).evalLibFunction("numerateQuestion")
+    }
+
+    function clearAll(){
+      alert('Документ буде очищено повністю "OK" для підтвердження ')
+      alert('Очиста документу "OK" для підтвердження ')
+      var plashkaElement = document.getElementById('plashka');
+      plashkaElement.showModal()
+      google.script.run.withFailureHandler(onFailure).withSuccessHandler(onSuccess).evalLibFunction("clearAll")
+    }
+
+  //
+    
+  </script>
+</body>
+
+</html>
