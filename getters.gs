@@ -1,33 +1,33 @@
 function getSubject() {
-  let subject = cache.get("subject");
-  if (subject == null) {
+  let data = getSettingsFromProperties();
+  if (data.subject == null) {
     return 0;
   }
-  return subject;
+  return data.subject;
 }
 
 function getStatus() {
-  let status = cache.get("status");
-  if (status == "true") {
+  let data = getSettingsFromProperties();
+  if (data.status == "true") {
     return true;
-  } else if (status == "false" || status == null) {
+  } else if (data.status == "false" || data.status == null) {
     return false;
   }
-  return status;
+  return data.status;
 }
 
 function getType() {
-  let type = cache.get("type");
-  if (type == null) {
+  let data = getSettingsFromProperties();
+  if (data.type == null) {
     return 1
   }
-  return parseInt(type);
+  return parseInt(data.type);
 }
 
 function getTime() {
-  let time = cache.get("time");
-  if (time == null) {
+  let data = getSettingsFromProperties();
+  if (data.time == null) {
     return 60
   }
-  return parseInt(time);
+  return parseInt(data.time);
 }

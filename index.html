@@ -65,6 +65,12 @@
       font-weight: norma;
       /* margin-bottom: 20px; */
     }
+
+    .save-button{
+      width: auto;
+      padding-left: 10px;
+      padding-right: 10px;
+    }
   </style>
 
   <dialog class="share plashka-hide" id='plashka'>
@@ -82,11 +88,11 @@
   <fieldset>
     <legend>База даних</legend>
     <div>
-      <button class="action button" onclick="saveToDB()" id ='saveData'>🚀 Завантажити в базу даних</button>
+      <button class="action button save-button" onclick="saveSettings()" id ='saveSettings'>🚀 Зберегти налаштування та завантажити</button>
     </div>
-    <div>
+    <!-- <div>
       <button class="action button" onclick="saveSettings()" id ='saveSettings'>💾 Зберегти налаштування</button>
-    </div>
+    </div> -->
   </fieldset>
 
   <fieldset>
@@ -119,20 +125,20 @@
     <? if (status == true) { ?>
     <div>
       <input type="radio" id="active" name="status" value="true" checked />
-      <label for="active">Доступний для проходження</label>
+      <label for="active">✅ Доступний для проходження</label>
     </div>
     <div>
       <input type="radio" id="passive" name="status" value="false" />
-      <label for="passive">Недоступний для проходження</label>
+      <label for="passive">⛔ Недоступний для проходження</label>
     </div>
     <? } else if (status == false)  { ?>
     <div>
       <input type="radio" id="active" name="status" value="true" />
-      <label for="active">Доступний для проходження</label>
+      <label for="active">✅ Доступний для проходження</label>
     </div>
     <div>
       <input type="radio" id="passive" name="status" value="false" checked />
-      <label for="passive">Недоступний для проходження</label>
+      <label for="passive">⛔ Недоступний для проходження</label>
     </div>
     <? } ?>
   </fieldset>
@@ -211,25 +217,6 @@
       <button class="button" onclick="window.open('https://dev-validator.ztu.edu.ua/nmt24/nmt-client/index.html')">Сайт nmt24 (virtual server)</button>
     </div>
   </fieldset>
-
-  <details>
-    <summary style="color: #fff">Для розробника</summary>
-    <div>
-      <button class="action" onclick="google.script.run.withSuccessHandler(onSuccess).evalLibFunction('TestDataManagerRemoveCache');">Видалити кеш документу</button>
-      <button class="action" onclick="google.script.run.withSuccessHandler(onSuccess).evalLibFunction('TestDataManagerCacheAlert');">Отримати кеш документу</button>
-    </div>
-    <hr>
-    <div>
-      <button class="action" onclick="google.script.run.withSuccessHandler(onSuccess).evalLibFunction('allTestsVisible')">Зробити ВСІ документи видимими</button>
-      <button class="action" onclick="google.script.run.withSuccessHandler(onSuccess).evalLibFunction('allTestsInisible')">Зробити ВСІ документи невидимими</button>
-    </div>
-  </details>
-
-
-  <!-- <? function count(){
-          return document.getElementById('numericInput').value}?> -->
-
-
   <script>
     function onSuccess(){
       var plashkaElement = document.getElementById('plashka');
@@ -243,6 +230,8 @@
     }
 
     function saveSettings(){
+       var plashkaElement = document.getElementById('plashka');
+      plashkaElement.showModal()
       let subject = document.getElementById("subjects").selectedIndex;
       console.log(subject)
 
@@ -260,7 +249,7 @@
 
       let argumentsString = `${subject}, ${status}, ${type}, ${time}`
       console.log(argumentsString)
-      document.getElementById('plashka').show();
+      console.log(argumentsString)
       google.script.run.withFailureHandler(onFailure).withSuccessHandler(onSuccess).evalLibFunction("saveSettings", argumentsString)
     }
 

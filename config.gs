@@ -3,6 +3,7 @@ try {
   var document = DocumentApp.getActiveDocument();
   var body = document.getBody();
   var cache = CacheService.getDocumentCache();
+  var documentProperties = PropertiesService.getDocumentProperties();
 } catch (error) {
 
 }

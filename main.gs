@@ -11,6 +11,8 @@ function onOpen(e) {
   //saveTestData()
   ui.createMenu("НМТ")
     .addItem("✨ Шаблони", "NMTparserlib.showSidebar")
+    // .addItem("setProperties", "NMTparserlib.setP")
+    // .addItem("getProperties", "NMTparserlib.getP")
     .addToUi();
 }
 //testData = testData
@@ -20,70 +22,24 @@ function showSidebar() {
   DocumentApp.getUi().showSidebar(html);
 }
 
+function getP() {
+  let data = getSettingsFromProperties()
+  DocumentApp.getUi().alert(`Параметри документу:
+Предмет: ${data.subject}
+Статус: ${data.status}
+Тип: ${data.type}
+Час на виконання тесту: ${data.time} хвилин`);
+}
+
+
+function setP(){
+  saveSettingsToProperties(8, false, 0, 5)
+}
+
 //-----------------------------------------------------------------------------
 function onEdit(e) {
 
 }
-
-function allTestsVisible() {
-  let folders = DriveApp.getFolderById("1sbE13_qHXHfNeaT21IMwKp5-5xYkRhQj").getFolders()
-  while (folders.hasNext()) {
-    let folder = folders.next();
-    let files = folder.getFiles();
-
-    while (files.hasNext()) {
-      let file = files.next();
-
-      let formData = {
-        'testId': file.getId(),
-        'param': "status",
-        'value': true
-      };
-      Logger.log(formData)
-      let options = {
-        'method': 'post',
-        'payload': formData
-      };
-      try {
-        UrlFetchApp.fetch(serverUrl + '/rest/v1/test/changeParam', options);
-      } catch (error) {
-        Logger.log(error)
-      }
-    }
-  }
-  DocumentApp.getUi().alert("Успішно зроблено всі тести видимими")
-}
-
-function allTestsInisible() {
-  let folders = DriveApp.getFolderById("1sbE13_qHXHfNeaT21IMwKp5-5xYkRhQj").getFolders()
-  while (folders.hasNext()) {
-    let folder = folders.next();
-    let files = folder.getFiles();
-
-    while (files.hasNext()) {
-      let file = files.next();
-
-      let formData = {
-        'testId': file.getId(),
-        'param': "status",
-        'value': false
-      };
-      Logger.log(formData)
-      let options = {
-        'method': 'post',
-        'payload': formData
-      };
-      try {
-        UrlFetchApp.fetch(serverUrl + '/rest/v1/test/changeParam', options);
-      } catch (error) {
-        Logger.log(error)
-      }
-    }
-  }
-  DocumentApp.getUi().alert("Успішно зроблено всі тести невидимими")
-}
-
-
 
 function getTemplates() {
   return Object.keys(typesOfTask)
@@ -101,28 +57,43 @@ function getSubjects() {
 function setServerParam(param, value) {
   Logger.log(param + ": " +value)
   cache.put(param, value, 60 * 60 * 24 * 365)
-  var options = {
-    'method': 'post',
-    'payload': {
-      'testId': document.getId(),
-      'param': param,
-      'value': value
-    }
+  // var options = {
+  //   'method': 'post',
+  //   'payload': {
+  //     'testId': document.getId(),
+  //     'param': param,
+  //     'value': value
+  //   }
+  // };
+  // UrlFetchApp.fetch(serverUrl + '/rest/v1/test/changeParam', options);
+}
+
+function saveSettingsToProperties(subject, status, type, time) {
+  let documentSettings = {
+    'subject': subject,
+    'status': status,
+    'type': type,
+    'time': time
   };
-  UrlFetchApp.fetch(serverUrl + '/rest/v1/test/changeParam', options);
+
+  documentProperties.setProperty('SETTINGS', JSON.stringify(documentSettings));
+}
+
+function getSettingsFromProperties() {
+  let documentSettings = documentProperties.getProperty('SETTINGS');
+  return JSON.parse(documentSettings)
 }
 
 function saveSettings(subject, status, type, time) {
-  setServerParam("subject", subject);
-
+  Logger.log(subject, status, type, time)
   let title = document.getName().split(' ')
   let statusTitle;
   let typeOfTestTitle;
 
   if (status == true) {
-    statusTitle = 'Доступний'
+    statusTitle = '✅'
   } else if (status == false) {
-    statusTitle = 'Недоступний'
+    statusTitle = '⛔'
   }
 
   if (type == 1) {
@@ -143,9 +114,11 @@ function saveSettings(subject, status, type, time) {
     return false;
   }
 
-  setServerParam("status", status);
-  setServerParam("type", parseInt(type));
-  setServerParam("testTime", parseInt(time));
+  saveSettingsToProperties(subject, status, type, time);
+  // setServerParam("subject", subject);
+  // setServerParam("status", status);
+  // setServerParam("type", parseInt(type));
+  // setServerParam("testTime", parseInt(time));
 
   var newTitle = statusTitle + ' ' + typeOfTestTitle + ' ' + title[2] + ' ' + Object.keys(subjects)[subject] + " " + time + " хв";
   document.setName(newTitle)
@@ -160,6 +133,8 @@ function saveSettings(subject, status, type, time) {
     document.addHeader().setText(newTitle);
   }
   moveDocumentToFolder(document.getId(), Object.values(subjects)[parseInt(subject)])
+
+  NMTparserlib.main()
 }
 
 
@@ -196,54 +171,6 @@ var copyContent = function (source, target) {
 
 
 function main() {
-  subject = cache.get("subject");
-  if (subject == null) {
-    subject = 0
-  }
-
-  status = cache.get("status");
-  if (status == null || status=="false") {
-    status = false
-  } else {
-    status = true
-  }
-  cache.put("status", status, 60 * 60 * 12 * 365)
-
-  type = cache.get("type");
-  if (type == null) {
-    type = 1
-    cache.put("type", type, 60 * 60 * 12 * 365)
-  }
-
-  time = cache.get("time")
-  if (time == null){
-    time = 60
-  }
-  let statusTitle;
-  if (status == true) {
-    statusTitle = 'Доступний'
-  } else if (status == false) {
-    statusTitle = 'Недоступний'
-  }
-  let typeOfTestTitle;
-  if (type == 1) {
-    typeOfTestTitle = 'НМТ'
-  } else if (type == 0) {
-    typeOfTestTitle = 'Навчальний'
-  }
-
-  var ui = DocumentApp.getUi();
-  let response = ui.alert(`Ваш тест буде загружено на сервер з такими параметрами:
-Предмет: ${Object.keys(subjects)[subject]}
-Статус: ${statusTitle}
-Тип: ${typeOfTestTitle}
-Час на виконання тесту: ${time} хвилин`, ui.ButtonSet.YES_NO);
-
-  // Process the user's response.
-  if (response == ui.Button.NO) {
-    return false;
-  }
-
   qToDB = [];
   // Отримання HTML документа і заміна спец. символів на Unicode (ну тіпа пачєму би і нєт?)
   var data = replaceSymbols(getContent(document.getId(), false)).replace("<h1></h1>", "");
@@ -277,9 +204,6 @@ function main() {
 
       // Виявлення типу завдання для їх правильної обробки на сайті:
       // -1 - Неправильний тип запитання
-      // 0 - Тестові завдання з однією відповіддю
-      // 1 - Тестові завдання з декількома відповідями
-      // 2 - Завдання на введення
       try {
         var qtype = Object.keys(typesOfTask).indexOf(currentQuestion.split("&lt;type&gt;")[1].split("&lt;/type&gt;")[0]);
       } catch (error) {
@@ -309,19 +233,63 @@ function main() {
       }
     }
   }
+  let settings = getSettingsFromProperties();
+
+  if (settings.subject == null) {
+    settings.subject = 0
+  }
+
+  if (settings.status == null || settings.status=="false") {
+    settings.status = false
+  } else if (settings.status=="true"){
+    settings.status = true
+  }
+
+  if (settings.type == null) {
+    settings.type = 1
+  }
+
+  if (settings.time == null){
+    settings.time = 60
+  }
+  
+  let statusTitle;
+  if (settings.status == true) {
+    statusTitle = '✅'
+  } else if (settings.status == false) {
+    statusTitle = '⛔'
+  }
+  let typeOfTestTitle;
+  if (settings.type == 1) {
+    typeOfTestTitle = 'НМТ'
+  } else if (settings.type == 0) {
+    typeOfTestTitle = 'Навчальний'
+  }
+
+  let ui = DocumentApp.getUi();
+  let response = ui.alert(`Ваш тест буде загружено на сервер з такими параметрами:
+Предмет: ${Object.keys(subjects)[settings.subject]}
+Статус: ${statusTitle}
+Тип: ${typeOfTestTitle}
+Час на виконання тесту: ${settings.time} хвилин`, ui.ButtonSet.YES_NO);
+
+  // Process the user's response.
+  if (response == ui.Button.NO) {
+    return false;
+  }
   
 
-  if (subject != null) {
-    var formData = {
+  if (settings.subject != null) {
+    let formData = {
       "testId": DocumentApp.getActiveDocument().getId(),
       "name": DocumentApp.getActiveDocument().getName(),
-      "subject": subject,
+      "subject": settings.subject,
       "questions": JSON.stringify(qToDB),
-      "status": status,
-      "testType": type,
-      "testTime": time,
+      "status": settings.status,
+      "type": settings.type,
+      "testTime": settings.time,
     };
-    var options = {
+    let options = {
       'method': 'post',
       'payload': formData
     };
